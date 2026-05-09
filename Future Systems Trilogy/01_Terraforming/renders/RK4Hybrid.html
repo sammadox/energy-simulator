@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Energy Dissipation (Improved Prediction)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<canvas id="chart"></canvas>
+
+<script>
+const m = 1.0;
+const v0 = 10.0;
+const k = 0.3;
+
+const t = [];
+const E_exact = [];
+const E_euler = [];
+const E_rk4 = [];
+
+let v_euler = v0;
+let v_rk4 = v0;
+
+const dt = 0.1;
+
+// RK4 step function
+function rk4(v, dt) {
+    const f = (v) => -k * v;
+
+    let k1 = f(v);
+    let k2 = f(v + 0.5 * dt * k1);
+    let k3 = f(v + 0.5 * dt * k2);
+    let k4 = f(v + dt * k3);
+
+    return v + (dt / 6) * (k1 + 2*k2 + 2*k3 + k4);
+}
+
+for (let i = 0; i <= 100; i++) {
+    let time = i * dt;
+    t.push(time);
+
+    // Exact model
+    let v_exact = v0 * Math.exp(-k * time);
+    E_exact.push(0.5 * m * v_exact * v_exact);
+
+    // Euler model (baseline)
+    v_euler = v_euler + (-k * v_euler) * dt;
+    E_euler.push(0.5 * m * v_euler * v_euler);
+
+    // RK4 model (improved)
+    v_rk4 = rk4(v_rk4, dt);
+    E_rk4.push(0.5 * m * v_rk4 * v_rk4);
+}
+
+// Plot
+new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+        labels: t,
+        datasets: [
+            {
+                label: "Exact Solution",
+                data: E_exact,
+                borderWidth: 2,
+                fill: false
+            },
+            {
+                label: "Euler (Low Accuracy)",
+                data: E_euler,
+                borderDash: [5,5],
+                borderWidth: 2,
+                fill: false
+            },
+            {
+                label: "RK4 (High Accuracy)",
+                data: E_rk4,
+                borderWidth: 2,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { title: { display: true, text: "Time" } },
+            y: { title: { display: true, text: "Energy" } }
+        }
+    }
+});
+</script>
+
+</body>
+</html>
